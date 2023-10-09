@@ -26,7 +26,7 @@
   <div class='modal-dialog modal-lg' role='document'>
     <div class='modal-content'>
       <div class='modal-header'>
-        <h5 class='modal-title' id='permModalLabel_{{ identifier }}'><i class='fas fa-fw fa-{{ icon }}'></i> {{ modalTitle }}</h5>
+        <h5 class='modal-title' id='permModalLabel_{{ identifier }}'><i class='fas fa-fw fa-{{ icon }}' title='{{ label }}'></i> {{ modalTitle }}</h5>
         <button type='button' class='close' data-dismiss='modal' aria-label='Close'>
           <span aria-hidden='true'>&times;</span>
         </button>
@@ -73,8 +73,8 @@
             {% endfor %}
           </ul>
           <!-- add user to permissions input -->
-          <div id='autocompleteUsersDiv{{ identifier }}' class='input-group'>
-            <input id='{{ identifier }}_select_users' data-identifier='{{ identifier }}' class='form-control autocompleteUsers autocompleteUsersPermissions' placeholder='{{ 'Add user'|trans }}' autocomplete='off'>
+          <div id='autocompleteAnchorDiv_{{ identifier }}' class='input-group'>
+            <input id='{{ identifier }}_select_users' data-identifier='{{ identifier }}' data-complete-target='users' class='form-control' placeholder='{{ 'Add user'|trans }}' autocomplete='off'>
             <div class='input-group-append'>
               <button class='btn btn-primary' data-rw='{{ rw }}' data-identifier='{{ identifier }}' data-action='add-user-to-permissions'>{{ 'Add'|trans }}</button>
             </div>

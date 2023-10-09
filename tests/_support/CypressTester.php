@@ -16,9 +16,9 @@
  *
  * @SuppressWarnings(PHPMD)
 */
-class ApiTester extends \Codeception\Actor
+class CypressTester extends \Codeception\Actor
 {
-    use _generated\ApiTesterActions;
+    use _generated\CypressTesterActions;
 
     /**
      * Define custom actions here

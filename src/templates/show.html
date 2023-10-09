@@ -2,7 +2,7 @@
 
 {% block title %}
 <div class='d-flex align-content-center'>
-  <h1 id='pageTitle' {% if hideTitle %}hidden{%endif%}>{{ App.pageTitle }}</h1>
+  <h1 id='pageTitle' {% if hideTitle %}hidden{% endif %}>{{ App.pageTitle }}</h1>
   {% if not searchPage %}
     <div class='ml-auto'>
       {% include 'create-new.html' %}
@@ -34,10 +34,10 @@
         <i class='fas fa-fw fa-table'></i>
       </div>
 
-      <div class='mr-2' data-action='toggle-items-layout'>
-      <button class='btn btn-secondary btn-sm' data-action='toggle-next' data-toggle-target='filtersDiv' aria-label='{{ 'Toggle filters'|trans }}'>
-        <i class='fas fa-filter fa-fw mr-1 color-white'></i>{{ 'Filters'|trans }}
-      </button>
+      <div class='mr-2'>
+        <div class='btn btn-secondary btn-sm' data-action='toggle-next' data-toggle-target='filtersDiv' aria-label='{{ 'Toggle filters'|trans }}'>
+          <i class='fas fa-filter fa-fw mr-1 color-white'></i>{{ 'Filters'|trans }}
+        </div>
       </div>
 
       {# ORDER (Sort) #}
@@ -47,7 +47,7 @@
           <a class='dropdown-item {{ (App.Request.query.get('order') == 'date' and App.Request.query.get('sort') == 'desc') ? 'active' }}' data-query='date-desc' href='#'>{{ 'Newest'|trans }}</a>
           <a class='dropdown-item {{ (App.Request.query.get('order') == 'date' and App.Request.query.get('sort') == 'asc') ? 'active' }}' data-query='date-asc' href='#'>{{ 'Oldest'|trans }}</a>
           <a class='dropdown-item {{ (App.Request.query.get('order') == 'lastchange' and App.Request.query.get('sort') == 'desc') ? 'active' }}' data-query='lastchange-desc' href='#'>{{ 'Recently modified'|trans }}</a>
-          <a class='dropdown-item {{ (App.Request.query.get('order') == 'lastchange' and App.Request.query.get('sort') == 'asc')? 'active' }}' data-query='lastchange-asc' href='#'>{{ 'Least recently modified'|trans }}</a>
+          <a class='dropdown-item {{ (App.Request.query.get('order') == 'lastchange' and App.Request.query.get('sort') == 'asc') ? 'active' }}' data-query='lastchange-asc' href='#'>{{ 'Least recently modified'|trans }}</a>
           <a class='dropdown-item {{ (App.Request.query.get('order') == 'cat' and App.Request.query.get('sort') == 'desc') ? 'active' }}' data-query='cat-desc' href='#'>{{ 'Category'|trans }}</a>
           <a class='dropdown-item {{ (App.Request.query.get('order') == 'cat' and App.Request.query.get('sort') == 'asc') ? 'active' }}' data-query='cat-asc' href='#'>{{ 'Category (inverted)'|trans }}</a>
           <a class='dropdown-item {{ (App.Request.query.get('order') == 'id' and App.Request.query.get('sort') == 'desc') ? 'active' }}' data-query='id-desc' href='#'>{{ 'Highest ID'|trans }}</a>
@@ -64,11 +64,10 @@
     </div>
   </div>
 
-  <div hidden id='filtersDiv' data-save-hidden='filtersDiv'>
+  <div id='filtersDiv' hidden data-save-hidden='filtersDiv'>
     <div class='d-flex'>
       {# LEFT MENU: FILTER/ORDER/SORT/LIMIT #}
-      {# we hide this menu for small devices #}
-      <div class='d-none d-sm-block {{ searchPage ? 'mt-2' }}'>
+      <div class='{{ searchPage ? 'mt-2' }}'>
         <form>
           <div class='form-group form-inline'>
             {% if not searchPage %}
@@ -80,10 +79,19 @@
 
             {# CATEGORY #}
             <select name='cat' class='autosubmit mr-1 form-control' aria-label='Filter category'>
-              <option value=''>{{ Entity.type == 'experiments' ? 'Filter status'|trans : 'Filter by type'|trans }}</option>
+              <option value=''>{{ 'Filter category'|trans }}</option>
               {% for category in categoryArr %}
-                <option value='{{ category.category_id }}'{{ App.Request.query.get('cat') == category.category_id ? ' selected'}}>
-                {{ category.category|raw }}</option>
+                <option value='{{ category.id }}'{{ App.Request.query.get('cat') == category.id ? ' selected' }}>
+                {{ category.title|raw }}</option>
+              {% endfor %}
+            </select>
+
+            {# STATUS #}
+            <select name='status' class='autosubmit mr-1 form-control' aria-label='Filter status'>
+              <option value=''>{{ 'Filter status'|trans }}</option>
+              {% for status in statusArr %}
+                <option value='{{ status.id }}'{{ App.Request.query.get('status') == status.id ? ' selected' }}>
+                {{ status.title|raw }}</option>
               {% endfor %}
             </select>
 
@@ -91,7 +99,7 @@
             <select name='owner' class='autosubmit mr-1 form-control' aria-label='Filter owner'>
               <option value=''>{{ 'Filter owner'|trans }}</option>
               {% for user in usersArr %}
-                <option value='{{ user.userid }}'{{ App.Request.query.get('owner') == user.userid ? ' selected'}}>
+                <option value='{{ user.userid }}'{{ App.Request.query.get('owner') == user.userid ? ' selected' }}>
                 {{ user.fullname|raw }}</option>
               {% endfor %}
             </select>
@@ -101,7 +109,7 @@
               <select name='extended' class='autosubmit mr-1 form-control' aria-label='Filter visibility'>
                 <option value=''>{{ 'Filter visibility'|trans }}</option>
                 {% for vis in visibilityArr %}
-                <option value='visibility:"{{ vis }}"'{{ App.Request.query.get('extended') == 'visibility:"' ~ vis|raw ~ '"' ? ' selected'}}>
+                <option value='visibility:"{{ vis }}"'{{ App.Request.query.get('extended') == 'visibility:"' ~ vis|raw ~ '"' ? ' selected' }}>
                   {{ vis|raw }}</option>
                 {% endfor %}
               </select>
@@ -169,19 +177,23 @@
       <div id='withSelected' class='d-none'>
         <div class='row mx-0'><p>{{ 'With selected:'|trans }}</p></div>
         <div class='row mx-0 form-inline'>
-          <!-- Change category -->
-          <select data-action='update-category-selected-entities' autocomplete='off' class='mr-1 mb-2 form-control'>
-              <option selected disabled>
-              {% if Entity.type == 'experiments' %}
-                  {{ 'Change status'|trans }}
-              {% else %}
-                  {{ 'Change item type'|trans }}
-              {% endif %}
-              </option>
-
-              {% for category in categoryArr %}
-                  <option value='{{ category.category_id }}'>{{ category.category }}</option>
-              {% endfor %}
+          {# CHANGE CATEGORY #}
+          <select data-action='update-catstat-selected-entities' data-target='category' autocomplete='off' class='mr-1 mb-2 form-control'>
+            <option selected disabled>
+              {{ 'Change category'|trans }}
+            </option>
+            {% for category in categoryArr %}
+                <option value='{{ category.id }}'>{{ category.title|raw }}</option>
+            {% endfor %}
+          </select>
+          {# CHANGE STATUS #}
+          <select data-action='update-catstat-selected-entities' data-target='status' autocomplete='off' class='mr-1 mb-2 form-control'>
+            <option selected disabled>
+              {{ 'Change status'|trans }}
+            </option>
+            {% for status in statusArr %}
+                <option value='{{ status.id }}'>{{ status.title|raw }}</option>
+            {% endfor %}
           </select>
 
           <!-- Change visibility -->
@@ -213,7 +225,7 @@
               <select id='addLinkCatFilter' class='brl-none form-control'>
                 <option selected value=''>{{ 'Any category'|trans }}</option>
                 {% for cat in itemsCategoryArr %}
-                  <option value='{{ cat.category_id }}'>{{ cat.category }}</option>
+                  <option value='{{ cat.id }}'>{{ cat.title|raw }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -282,6 +294,12 @@
                 <div class='d-flex justify-content-between'>
                   <span>{{ 'Category'|trans }}</span>
                   <a href='#' data-action='reorder-entities' data-orderby='cat'><i class='fas {{ sortIcon("cat") }}'></i></a>
+                </div>
+              </th>
+              <th class='category-item-table w-20'>
+                <div class='d-flex justify-content-between'>
+                  <span>{{ 'Status'|trans }}</span>
+                  <a href='#' data-action='reorder-entities' data-orderby='status'><i class='fas {{ sortIcon("status") }}'></i></a>
                 </div>
               </th>
               <th class='tags-item-table w-20'>
