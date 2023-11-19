@@ -5,7 +5,6 @@
  * @license AGPL-3.0
  * @package elabftw
  */
-declare let ChemDoodle: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 import 'jquery-ui/ui/widgets/sortable';
 import * as $3Dmol from '3dmol';
 import { Action, CheckableItem, ResponseMsg, EntityType, Entity, Model } from './interfaces';
@@ -15,6 +14,7 @@ declare const MathJax: MathJaxObject;
 import $ from 'jquery';
 import i18next from 'i18next';
 import { Api } from './Apiv2.class';
+import { ChemDoodle } from '@deltablot/chemdoodle-web-mini/dist/chemdoodle.min.js';
 
 // get html of current page reloaded via get
 function fetchCurrentPage(tag = ''): Promise<Document>{
@@ -357,10 +357,14 @@ export function addAutocompleteToLinkInputs(): void {
       $(`#${object.inputElId}`).autocomplete({
         source: function(request: Record<string, string>, response: (data) => void): void {
           const term = request.term;
+          const format = entity => {
+            const category = entity.category_title ? `${entity.category_title} - `: '';
+            return `${entity.id} - ${category}${entity.title.substring(0, 60)}`;
+          };
           if (term in cache[object.selectElid]) {
             const res = [];
             cache[object.selectElid][term].forEach(entity => {
-              res.push(`${entity.id} - [${entity.mainattr_title}] ${entity.title.substring(0, 60)}`);
+              res.push(format(entity));
             });
             response(res);
             return;
@@ -369,7 +373,7 @@ export function addAutocompleteToLinkInputs(): void {
             cache[object.selectElid][term] = json;
             const res = [];
             json.forEach(entity => {
-              res.push(`${entity.id} - [${entity.mainattr_title}] ${entity.title.substring(0, 60)}`);
+              res.push(format(entity));
             });
             response(res);
           });
