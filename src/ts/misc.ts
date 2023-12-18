@@ -74,10 +74,16 @@ export function listenTrigger(): void {
       params[el.dataset.target] = value;
       ApiC.patch(`${el.dataset.model}`, params).then(() => {
         if (el.dataset.reload) {
-          reloadElement(el.dataset.reload).then(() => {
-            // make sure we listen to the new element too
-            listenTrigger();
-          });
+          if (el.dataset.reload === 'page') {
+            location.reload();
+          } else {
+            el.dataset.reload.split(',').forEach(toreload => {
+              reloadElement(toreload).then(() => {
+                // make sure we listen to the new element too
+                listenTrigger();
+              });
+            });
+          }
         }
       }).catch(error => {
         if (el.dataset.target === Target.Customid && error.message === i18next.t('custom-id-in-use')) {
@@ -312,17 +318,23 @@ export async function reloadElement(elementId: string): Promise<void> {
  */
 export function adjustHiddenState(): void {
   document.querySelectorAll('[data-save-hidden]').forEach(el => {
-    const localStorageKey = (el as HTMLElement).dataset.saveHidden + '-isHidden';
-    const caretIcon = el.previousElementSibling.querySelector('i');
+    const targetElement = (el as HTMLElement).dataset.saveHidden;
+    const localStorageKey = targetElement + '-isHidden';
+    const button = document.querySelector(`[data-toggle-target="${targetElement}"]`) || el.previousElementSibling;
+    const caretIcon =  button.querySelector('i');
     if (localStorage.getItem(localStorageKey) === '1') {
       el.setAttribute('hidden', 'hidden');
       caretIcon.classList.remove('fa-caret-down');
-      caretIcon.classList.add('fa-caret-right');
+      if (targetElement !== 'filtersDiv') {
+        caretIcon.classList.add('fa-caret-right');
+      }
+      button.setAttribute('aria-expanded', 'false');
     // make sure to explicitly check for the value, because the key might not exist!
     } else if (localStorage.getItem(localStorageKey) === '0') {
       el.removeAttribute('hidden');
       caretIcon.classList.remove('fa-caret-right');
       caretIcon.classList.add('fa-caret-down');
+      button.setAttribute('aria-expanded', 'true');
     }
   });
 }

@@ -12,6 +12,7 @@ namespace Elabftw\Models;
 use function array_map;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
+use Elabftw\AuditEvent\ConfigModified;
 use Elabftw\Elabftw\Db;
 use Elabftw\Elabftw\TwigFilters;
 use Elabftw\Elabftw\Update;
@@ -134,7 +135,6 @@ final class Config implements RestInterface
             ('saml_sync_teams', 0),
             ('saml_sync_email_idp', '0'),
             ('support_url', 'https://github.com/elabftw/elabftw/issues'),
-            ('deletable_xp', 1),
             ('allow_useronly', 1),
             ('admins_import_users', 0),
             ('max_revisions', 10),
@@ -256,6 +256,7 @@ final class Config implements RestInterface
             $req->bindParam(':value', $value);
             $req->bindParam(':name', $name);
             $this->Db->execute($req);
+            AuditLogs::create(new ConfigModified($name, (string) $this->configArr[$name], (string) $value));
             $this->configArr[$name] = (string) $value;
         }
 

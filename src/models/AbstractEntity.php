@@ -296,7 +296,7 @@ abstract class AbstractEntity implements RestInterface
             FROM tags2entity
             LEFT JOIN tags ON (tags2entity.tag_id = tags.id)
             LEFT JOIN favtags2users ON (favtags2users.users_id = :userid AND favtags2users.tags_id = tags.id)
-            WHERE tags2entity.item_type = :type AND ' . $sqlid;
+            WHERE tags2entity.item_type = :type AND ' . $sqlid . ' ORDER by tag';
         $req = $this->Db->prepare($sql);
         $req->bindParam(':type', $this->type);
         $req->bindParam(':userid', $this->Users->userData['userid'], PDO::PARAM_INT);
@@ -635,14 +635,7 @@ abstract class AbstractEntity implements RestInterface
     private function updateJsonField(string $key, string|array $value): bool
     {
         $Changelog = new Changelog($this);
-        // yes this is ugly but linters...
-        $valueAsString = '';
-        if (is_string($value)) {
-            $valueAsString = $value;
-        }
-        if (is_array($value)) {
-            $valueAsString = implode(', ', $value);
-        }
+        $valueAsString = is_array($value) ? implode(', ', $value) : $value;
         $Changelog->create(new ContentParams('metadata_' . $key, $valueAsString));
         $value = json_encode($value, JSON_HEX_APOS | JSON_THROW_ON_ERROR);
 
