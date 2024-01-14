@@ -4,7 +4,7 @@
 {% endblock %}
 
 {# Modal for advanced search #}
-<div class='modal fade' id='advancedSearchModal' tabindex='-1' role='dialog' aria-labelledby='advancedSearchModalLabel' aria-hidden='true'>
+<div class='modal fade' id='advancedSearchModal' tabindex='-1' role='dialog' aria-labelledby='advancedSearchModalLabel'>
   <div class='modal-dialog modal-xl' role='document'>
     <div class='modal-content'>
       <div class='modal-header'>
@@ -13,7 +13,7 @@
           <span aria-hidden='true'>&times;</span>
         </button>
       </div>
-      <div class='modal-body' data-wait='{{ 'Please wait…' }}'>
+      <div class='modal-body' data-wait='{{ 'Please wait…'|trans }}'>
         <h3>Search terms</h3>
         <p>The search is performed against title, body, date, and elabid.<br>
             The entire team will be searched unless there is an author field.</p>
@@ -200,7 +200,7 @@
 
 {# SEARCH PAGE BEGIN #}
 <hr>
-<form method='get' action='search.php'>
+<form method='get' action='search.php' aria-label='Main search form'>
 {# MAIN TEXTAREA FOR EXTENDED QUERY #}
 <div class='row'>
   <div class='col-md-12 mb-2'>

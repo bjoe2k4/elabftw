@@ -162,22 +162,28 @@ class MakeEln extends MakeStreamZip
                 foreach ($uploadedFilesArr as $file) {
                     $uploadAtId = './' . $currentDatasetFolder . '/' . $file['real_name'];
                     $hasPart[] = array('@id' => $uploadAtId);
-                    $dataEntities[] = array(
+                    $fileNode = array(
                         '@id' => $uploadAtId,
                         '@type' => 'File',
-                        'description' => $file['comment'] ?? '',
                         'name' => $file['real_name'],
                         'alternateName' => $file['long_name'],
                         'contentSize' => $file['filesize'],
                         'sha256' => $file['hash'] ?? hash_file('sha256', $uploadAtId),
                     );
+                    // add the file comment as description but only if it's present
+                    if (!empty($file['comment'])) {
+                        $fileNode['description'] = $file['comment'];
+                    }
+                    $dataEntities[] = $fileNode;
                 }
             }
 
             // TAGS
             $keywords = array();
             if ($this->Entity->entityData['tags']) {
-                $keywords = explode('|', (string) $this->Entity->entityData['tags']);
+                // the keywords value is a comma separated list
+                // let's hope no one has a comma in their tags...
+                $keywords = implode(',', explode('|', (string) $this->Entity->entityData['tags']));
             }
 
             // MAIN ENTRY
@@ -202,7 +208,7 @@ class MakeEln extends MakeStreamZip
         // add the description of root with hasPart property
         $dataEntities[] = array(
             '@id' => './',
-            '@type' => array('Dataset'),
+            '@type' => 'Dataset',
             'hasPart' => $rootParts,
         );
 

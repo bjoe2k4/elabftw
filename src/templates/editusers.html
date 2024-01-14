@@ -1,7 +1,7 @@
 <h3 class='p-2 pl-3 section-title'>{{ 'Search users'|trans }}</h3>
 <div class='pl-3'>
   <div class='form-group'>
-    <form method='get' id ='userSearchForm'>
+    <form method='get' id='userSearchForm' aria-label='{{ 'Search users'|trans }}'>
       {# stay on correct tab #}
       <input type='hidden' value='3' name='tab' />
 
@@ -56,7 +56,7 @@
         {% for user in usersArr %}
           {% include('archive-user-modal.html') %}
           {# Modal for managing users to teams, generated for each user #}
-          <div class='modal fade' id='manageUsers2teamsModal_{{ user.userid }}' tabindex='-1' role='dialog' aria-labelledby='manageTeamsForUser' aria-hidden='true'>
+          <div class='modal fade' id='manageUsers2teamsModal_{{ user.userid }}' tabindex='-1' role='dialog' aria-labelledby='manageTeamsForUser'>
             <div class='modal-dialog modal-xl' role='document'>
               <div class='modal-content'>
                 <div class='modal-header'>
@@ -213,7 +213,7 @@
                         {% endif %}
                         {# Demote from Admin #}
                         {% if currentTeam.usergroup == 2 %}
-                          <button type='button' class='btn btn-dropdown-item dropdown-item' data-action='toggle-admin-user' data-promote='0' data-userid='{{ user.userid }}'>
+                          <button type='button' class='btn btn-dropdown-item dropdown-item' data-action='toggle-admin-user' data-promote='0' data-team='{{ App.Users.userData.team }}' data-userid='{{ user.userid }}'>
                             <i class='fas fa-fw fa-down-long mr-1'></i>{{ 'Demote from Admin'|trans }}
                           </button>
                         {% endif %}

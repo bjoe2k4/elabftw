@@ -35,7 +35,7 @@
 
 {% include('view-edit-toolbar.html') %}
 
-<section id='main_section'>
+<section id='main_section' aria-label='main section'>
 
   {# DATE and RATING #}
   <div class='d-flex mb-2'>
@@ -84,14 +84,14 @@
   {# BODY #}
   <div {{ not displayMainText ? 'hidden' }}>
     <h3 data-action='toggle-next' class='d-inline togglable-section-title' tabindex='0' role='button' aria-expanded='true'><i class='fas fa-caret-down fa-fw mr-2'></i>{{ 'Main text'|trans }}</h3>
-    <div>
+    <div data-save-hidden='mainTextDiv'>
       <div class='mt-4'>{# << this div is important around the textarea to fix an issue on mobile editor. See #3107 #}
         {% if editor == 'md' %}
           <textarea aria-label='{{ 'Main content'|trans }}' id='body_area' class='markdown-textarea' data-language='{{ App.getJsLang }}' name='body'>{{ Entity.entityData.body }}</textarea>
         {% else %}
         {# do not display body if set in metadata, done via css to avoid delayed disappearance after JS is executed #}
           {% if App.Config.configArr.debug -%}
-            <!-- [html-validate-disable-block element-permitted-content, no-deprecated-attr, prefer-native-element: suppress errors from tinymce] -->
+            <!-- [html-validate-disable-block unique-landmark, element-permitted-content, no-deprecated-attr, prefer-native-element: suppress errors from tinymce] -->
           {%- endif %}
           <textarea aria-label='{{ 'Main content'|trans }}' id='body_area' class='mceditable invisible' name='body'>{{ Entity.entityData.body }}</textarea>
         {% endif %}
@@ -122,14 +122,6 @@
 
 {# STEPS #}
 {% include 'steps-links-edit.html' %}
-
-{# UPLOAD FORM: not togglable or dropzone doesn't register #}
-<h3 class='d-inline togglable-section-title'><i class='fas fa-caret-down fa-fw mr-2'></i>{{ 'Attach a file'|trans }}</h3>
-{% if App.Config.configArr.debug -%}
-  <!-- [html-validate-disable-next wcag/h32: no submit button for navbar search field] -->
-{%- endif %}
-<form action='api/v2/{{ Entity.type }}/{{ Entity.id }}/uploads' class='dropzone hl-hover-gray mt-2 rounded' id='elabftw-dropzone'></form>
-<hr>
 
 {% include 'uploads.html' %}
 
@@ -186,7 +178,7 @@
   {# chemdoodle #}
   <div>
     {% if App.Config.configArr.debug -%}
-      <!-- [html-validate-disable-block deprecated, element-permitted-content, no-missing-references, prefer-native-element, wcag/h37, wcag/h67, text-content, no-implicit-button-type, no-redundant-role: suppress errors from sketcher] -->
+      <!-- [html-validate-disable-block deprecated, element-permitted-content, no-missing-references, prefer-native-element, wcag/h67, no-implicit-button-type, no-redundant-role: suppress errors from sketcher] -->
     {%- endif %}
     <canvas id='sketcher'></canvas>
   </div>

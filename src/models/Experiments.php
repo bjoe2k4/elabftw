@@ -10,24 +10,11 @@
 namespace Elabftw\Models;
 
 use Elabftw\Elabftw\Metadata;
-use Elabftw\Elabftw\TimestampResponse;
 use Elabftw\Elabftw\Tools;
-use Elabftw\Enums\Action;
 use Elabftw\Enums\BasePermissions;
 use Elabftw\Enums\EntityType;
-use Elabftw\Enums\ExportFormat;
 use Elabftw\Exceptions\ImproperActionException;
-use Elabftw\Interfaces\MakeTimestampInterface;
-use Elabftw\Make\MakeCustomTimestamp;
-use Elabftw\Make\MakeDfnTimestamp;
-use Elabftw\Make\MakeDigicertTimestamp;
-use Elabftw\Make\MakeGlobalSignTimestamp;
-use Elabftw\Make\MakeSectigoTimestamp;
-use Elabftw\Make\MakeUniversignTimestamp;
-use Elabftw\Make\MakeUniversignTimestampDev;
-use Elabftw\Services\TimestampUtils;
 use Elabftw\Traits\InsertTagsTrait;
-use GuzzleHttp\Client;
 use PDO;
 
 /**
@@ -198,15 +185,6 @@ class Experiments extends AbstractConcreteEntity
         return parent::destroy() && $this->Pins->cleanup();
     }
 
-    public function patch(Action $action, array $params): array
-    {
-        $this->canOrExplode('write');
-        return match ($action) {
-            Action::Timestamp => $this->timestamp(),
-            default => parent::patch($action, $params),
-        };
-    }
-
     protected function getNextCustomId(int $category): ?int
     {
         $sql = 'SELECT custom_id FROM experiments WHERE custom_id IS NOT NULL AND category = :category ORDER BY custom_id DESC LIMIT 1';
@@ -218,44 +196,5 @@ class Experiments extends AbstractConcreteEntity
             return null;
         }
         return ++$res['custom_id'];
-    }
-
-    private function getTimestampMaker(array $config, ExportFormat $dataFormat): MakeTimestampInterface
-    {
-        return match ($config['ts_authority']) {
-            'dfn' => new MakeDfnTimestamp($config, $this, $dataFormat),
-            'universign' => $config['debug'] ? new MakeUniversignTimestampDev($config, $this, $dataFormat) : new MakeUniversignTimestamp($config, $this, $dataFormat),
-            'digicert' => new MakeDigicertTimestamp($config, $this, $dataFormat),
-            'sectigo' => new MakeSectigoTimestamp($config, $this, $dataFormat),
-            'globalsign' => new MakeGlobalSignTimestamp($config, $this, $dataFormat),
-            'custom' => new MakeCustomTimestamp($config, $this, $dataFormat),
-            default => throw new ImproperActionException('Incorrect timestamp authority configuration.'),
-        };
-    }
-
-    private function timestamp(): array
-    {
-        $Config = Config::getConfig();
-        $dataFormat = ExportFormat::Json;
-        // if we do keeex we want to timestamp a pdf so we can keeex it
-        // there might be other options impacting this condition later
-        if ($Config->configArr['keeex_enabled'] === '1') {
-            $dataFormat = ExportFormat::Pdf;
-        }
-        $Maker = $this->getTimestampMaker($Config->configArr, $dataFormat);
-        $data = $Maker->generateData();
-        $TimestampUtils = new TimestampUtils(
-            new Client(),
-            $data,
-            $Maker->getTimestampParameters(),
-            new TimestampResponse(),
-        );
-        $tsResponse = $TimestampUtils->timestamp();
-        $Maker->saveTimestamp($TimestampUtils->getDataPath(), $tsResponse);
-
-        // decrement the balance
-        $Config->decrementTsBalance();
-
-        return $this->readOne();
     }
 }

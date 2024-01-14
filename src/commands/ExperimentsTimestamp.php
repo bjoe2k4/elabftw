@@ -70,6 +70,7 @@ class ExperimentsTimestamp extends Command
                 $output->writeln(sprintf('Timestamping experiment %d', $exp['id']));
             }
             $Experiments->setId($exp['id']);
+            // use AutoTimestamp action so the archive will be Archived and invisible to users
             $Experiments->patch(Action::Timestamp, array());
         }
 
