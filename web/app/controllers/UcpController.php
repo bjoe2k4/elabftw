@@ -30,17 +30,17 @@ require_once dirname(__DIR__) . '/init.inc.php';
 $tab = 1;
 $Response = new RedirectResponse(sprintf('/ucp.php?tab=%d', $tab));
 
-$postData = $Request->request->all();
+$postData = $App->Request->request->all();
 try {
     // DEMO DISABLE ALL
     throw new ImproperActionException('This feature is disabled for the demo.');
     // END DEMO DISABLE ALL
     // TAB 2 : ACCOUNT
-    if ($Request->request->has('use_mfa')) {
+    if ($App->Request->request->has('use_mfa')) {
         $tab = 2;
         // if user is authenticated through external service we skip the password verification
         if ($App->Users->userData['auth_service'] === LoginController::AUTH_LOCAL) {
-            $App->Users->checkCurrentPasswordOrExplode($Request->request->getString('current_password'));
+            $App->Users->checkCurrentPasswordOrExplode($App->Request->request->getString('current_password'));
             // update the email if necessary
             if (isset($postData['email']) && ($postData['email'] !== $App->Users->userData['email'])) {
                 $App->Users->patch(Action::Update, array('email' => $postData['email']));
@@ -48,7 +48,9 @@ try {
         }
 
         // CHANGE PASSWORD (only for local accounts)
-        if (!empty($Request->request->get('password')) && (int) $App->Users->userData['auth_service'] === LoginController::AUTH_LOCAL) {
+        if (!empty($App->Request->request->getString('password'))
+            && (int) $App->Users->userData['auth_service'] === LoginController::AUTH_LOCAL
+        ) {
             $App->Users->patch(Action::UpdatePassword, $postData);
         }
 

@@ -6,7 +6,6 @@
  * @package elabftw
  */
 import 'jquery-ui/ui/widgets/sortable';
-import * as $3Dmol from '3dmol';
 import { Action, CheckableItem, ResponseMsg, EntityType, Entity, Model, Target } from './interfaces';
 import { DateTime } from 'luxon';
 import { MathJaxObject } from 'mathjax-full/js/components/startup';
@@ -93,8 +92,14 @@ function triggerHandler(event: Event, el: HTMLInputElement): void {
   });
 }
 
-export function listenTrigger(): void {
-  document.querySelectorAll('[data-trigger]').forEach((el: HTMLInputElement) => {
+export function listenTrigger(elementId: string = ''): void {
+  let elems: NodeList;
+  if (elementId) {
+    elems = document.getElementById(elementId).querySelectorAll('[data-trigger]');
+  } else {
+    elems = document.querySelectorAll('[data-trigger]');
+  }
+  elems.forEach((el: HTMLInputElement) => {
     // remove event first to avoid stacking them
     el.removeEventListener(el.dataset.trigger, event => { triggerHandler(event, el); });
     el.addEventListener(el.dataset.trigger, event => { triggerHandler(event, el); });
@@ -211,12 +216,6 @@ export function displayMolFiles(): void {
   });
 }
 
-// this exists here because in the Observer of uploads.ts for filesdiv it makes the browser crash
-// FIXME
-export async function reloadUploads(): Promise<void> {
-  return reloadElement('filesdiv').then(() => $3Dmol.autoload());
-}
-
 // insert a get param in the url and reload the page
 export function insertParamAndReload(key: string, value: string): void {
   const params = new URLSearchParams(document.location.search.slice(1));
@@ -286,18 +285,6 @@ export async function reloadEntitiesShow(tag = ''): Promise<void | Response> {
   listenTrigger();
 }
 
-export async function reloadElements(elementIds: string[]): Promise<void> {
-  const html = await fetchCurrentPage();
-  elementIds.forEach(id => {
-    if (!document.getElementById(id)) {
-      console.error(`Could not find element with id ${id} to reload!`);
-      return;
-    }
-    document.getElementById(id).innerHTML = html.getElementById(id).innerHTML;
-    listenTrigger();
-  });
-}
-
 export async function reloadElement(elementId: string): Promise<void> {
   if (!document.getElementById(elementId)) {
     console.error(`Could not find element with id ${elementId} to reload!`);
@@ -305,7 +292,11 @@ export async function reloadElement(elementId: string): Promise<void> {
   }
   const html = await fetchCurrentPage();
   document.getElementById(elementId).innerHTML = html.getElementById(elementId).innerHTML;
-  listenTrigger();
+  listenTrigger(elementId);
+}
+
+export async function reloadElements(elementIds: string[]): Promise<void> {
+  elementIds.forEach(id => reloadElement(id));
 }
 
 /**

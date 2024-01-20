@@ -36,11 +36,11 @@ try {
     }
 
     // EMAIL TEAM
-    if ($Request->request->has('emailUsers')) {
+    if ($App->Request->request->has('emailUsers')) {
         // START DEMO BLOCK
         throw new ImproperActionException('Disabled for demo.');
         // END DEMO BLOCK
-        $target = (string) $Request->request->get('target');
+        $target = $App->Request->request->getString('target');
         // default to team
         $targetId = $App->Users->userData['team'];
         $targetType = EmailTarget::Team;
@@ -57,8 +57,8 @@ try {
         $sent = $Email->massEmail(
             $targetType,
             $targetId,
-            $Request->request->getString('subject'),
-            $Request->request->getString('body'),
+            $App->Request->request->getString('subject'),
+            $App->Request->request->getString('body'),
             $replyTo,
         );
         $App->Session->getFlashBag()->add('ok', sprintf(_('Email sent to %d users'), $sent));
