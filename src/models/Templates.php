@@ -64,7 +64,7 @@ class Templates extends AbstractTemplateEntity
             VALUES(:team, :title, :userid, :canread, :canwrite, :canread_target, :canwrite_target)';
         $req = $this->Db->prepare($sql);
         $req->bindParam(':team', $this->Users->userData['team'], PDO::PARAM_INT);
-        $req->bindValue(':title', Filter::title($title));
+        $req->bindValue(':title', $title);
         $req->bindParam(':userid', $this->Users->userData['userid'], PDO::PARAM_INT);
         $req->bindParam(':canread', $canread);
         $req->bindParam(':canwrite', $canwrite);
@@ -152,6 +152,7 @@ class Templates extends AbstractTemplateEntity
         // add steps and links in there too
         $this->entityData['steps'] = $this->Steps->readAll();
         $this->entityData['items_links'] = $this->ItemsLinks->readAll();
+        $this->entityData['sharelink'] = sprintf('%s/ucp.php?tab=3&mode=view&templateid=%d', Config::fromEnv('SITE_URL'), $this->id);
         return $this->entityData;
     }
 
