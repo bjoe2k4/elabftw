@@ -6,12 +6,11 @@
  * @package elabftw
  */
 import { Action, Entity, EntityType } from './interfaces';
-import { adjustHiddenState, makeSortableGreatAgain } from './misc';
+import { adjustHiddenState, makeSortableGreatAgain, notifError, reloadElements } from './misc';
 import i18next from 'i18next';
 import { Api } from './Apiv2.class';
 import { ValidMetadata, ExtraFieldProperties, ExtraFieldsGroup, ExtraFieldInputType } from './metadataInterfaces';
 import JsonEditorHelper from './JsonEditorHelper.class';
-
 
 export function ResourceNotFoundException(message: string): void {
   this.message = message;
@@ -52,12 +51,21 @@ export class Metadata {
    */
   handleEvent(event: Event): Promise<Response> | boolean {
     const el = event.target as HTMLFormElement;
-    if (el.reportValidity() === false || el.hasAttribute('readonly')) {
+    if (el.reportValidity() === false || el.hasAttribute('readonly') || el.value === el.defaultValue) {
       return false;
     }
     if (el.dataset.units === '1') {
       return this.updateUnit(event);
     }
+
+    // prevent self links
+    if (el.dataset.completeTarget === document.getElementById('info').dataset.type
+      && parseInt(el.value, 10) === parseInt(document.getElementById('info').dataset.id, 10)
+    ) {
+      notifError(new Error(i18next.t('no-self-links')));
+      return false;
+    }
+
     // by default the value is simply the value of the input, which is the event target
     let value = el.value;
     // special case for checkboxes
@@ -69,11 +77,21 @@ export class Metadata {
       // collect all the selected options, and the value will be an array
       value = [...el.selectedOptions].map(option => option.value);
     }
+    // special case for Experiment/Resource/User link
+    if ([ExtraFieldInputType.Experiments.valueOf(), ExtraFieldInputType.Items.valueOf(), ExtraFieldInputType.Users.valueOf()].includes(el.dataset.completeTarget)) {
+      value = parseInt(value.split(' ')[0], 10);
+      // also create a link automatically for experiments and resources
+      if ([ExtraFieldInputType.Experiments.valueOf(), ExtraFieldInputType.Items.valueOf()].includes(el.dataset.completeTarget)) {
+        this.api.post(`${this.entity.type}/${this.entity.id}/${el.dataset.completeTarget}_links/${value}`).then(() => reloadElements(['linksDiv', 'linksExpDiv']));
+      }
+    }
     const params = {};
     params['action'] = Action.UpdateMetadataField;
     params[el.dataset.field] = value;
     this.api.patch(`${this.entity.type}/${this.entity.id}`, params).then(() => {
       this.editor.loadMetadata();
+    }).catch(() => {
+      return;
     });
     return true;
   }
@@ -165,7 +183,7 @@ export class Metadata {
 
     let valueEl: HTMLElement;
     // checkbox is special case
-    if (properties.type === 'checkbox') {
+    if (properties.type === ExtraFieldInputType.Checkbox) {
       valueEl = document.createElement('input');
       valueEl.setAttribute('type', 'checkbox');
       valueEl.classList.add('d-block');
@@ -182,7 +200,7 @@ export class Metadata {
       valueEl.innerText = value;
       // the link is generated with javascript so we can still use innerText and
       // not innerHTML with manual "<a href...>" which implicates security considerations
-      if (properties.type === 'url') {
+      if (properties.type === ExtraFieldInputType.Url) {
         valueEl.dataset.genLink = 'true';
       }
     }
@@ -250,6 +268,9 @@ export class Metadata {
         (element as HTMLInputElement).checked = properties.value === 'on' ? true : false;
       }
       if (properties.allow_multi_values !== true) {
+        if (element instanceof HTMLInputElement) {
+          element.defaultValue = properties.value as string;
+        }
         element.value = properties.value as string;
       }
     }

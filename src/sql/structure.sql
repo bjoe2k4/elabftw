@@ -98,6 +98,7 @@ CREATE TABLE `config` (
 
 CREATE TABLE `experiments` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `team` int UNSIGNED NOT NULL,
   `title` varchar(255) NOT NULL,
   `date` date NOT NULL,
   `body` mediumtext,
@@ -204,7 +205,6 @@ CREATE TABLE `experiments_revisions` (
   `content_type` tinyint NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `userid` int(10) UNSIGNED NOT NULL,
-  `metadata` json NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
@@ -862,6 +862,7 @@ CREATE TABLE `users` (
   `salt` varchar(255) NULL DEFAULT NULL,
   `password` varchar(255) NULL DEFAULT NULL,
   `password_hash` varchar(255) NULL DEFAULT NULL,
+  `password_modified_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `mfa_secret` varchar(32) NULL DEFAULT NULL,
   `firstname` varchar(255) NOT NULL,
   `lastname` varchar(255) NOT NULL,

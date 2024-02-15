@@ -13,13 +13,17 @@ use Elabftw\Enums\DisplayMode;
 use Elabftw\Enums\Entrypoint;
 use Elabftw\Enums\Language;
 use Elabftw\Enums\Orderby;
+use Elabftw\Enums\PasswordComplexity;
 use Elabftw\Enums\PdfFormat;
 use Elabftw\Enums\Scope;
 use Elabftw\Enums\Sort;
 use Elabftw\Exceptions\ImproperActionException;
 use Elabftw\Interfaces\ContentParamsInterface;
+use Elabftw\Models\Config;
 use Elabftw\Services\Check;
 use Elabftw\Services\Filter;
+use Elabftw\Services\PasswordValidator;
+
 use function trim;
 
 final class UserParams extends ContentParams implements ContentParamsInterface
@@ -40,7 +44,7 @@ final class UserParams extends ContentParams implements ContentParamsInterface
                 }
             )(),
             // return the hash of the password
-            'password' => password_hash(Check::passwordLength($this->content), PASSWORD_DEFAULT),
+            'password' => $this->validateAndHashPassword(),
             'orcid' => $this->filterOrcid(),
             'limit_nb' => (string) Check::limit((int) $this->content),
             'display_mode' => (DisplayMode::tryFrom($this->content) ?? DisplayMode::Normal)->value,
@@ -55,6 +59,17 @@ final class UserParams extends ContentParams implements ContentParamsInterface
             'pdf_format' => (PdfFormat::tryFrom($this->content) ?? PdfFormat::A4)->value,
             default => throw new ImproperActionException('Invalid target for user update.'),
         };
+    }
+
+    private function validateAndHashPassword(): string
+    {
+        $Config = Config::getConfig();
+        $min = (int) $Config->configArr['min_password_length'];
+        $passwordComplexity = PasswordComplexity::from((int) $Config->configArr['password_complexity_requirement']);
+        $PasswordValidator = new PasswordValidator($min, $passwordComplexity);
+        $PasswordValidator->validate($this->content);
+
+        return password_hash($this->content, PASSWORD_DEFAULT);
     }
 
     private function filterOrcid(): string

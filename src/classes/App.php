@@ -44,7 +44,7 @@ class App
     use UploadTrait;
     use TwigTrait;
 
-    public const INSTALLED_VERSION = '5.0.0-beta2';
+    public const INSTALLED_VERSION = '5.0.0-beta3';
 
     // this version format is used to compare with last_seen_version of users
     // major is untouched, and minor and patch are padded with one 0 each
@@ -82,8 +82,9 @@ class App
 
         $this->Log->pushHandler(new ErrorLogHandler());
         $this->Users = new Users();
-        // UPDATE SQL SCHEMA if necessary or show error message if version mismatch
+        // Show helpful screen if database schema needs update
         $Update = new Update((int) $this->Config->configArr['schema'], new Sql(new Fs(new LocalFilesystemAdapter(dirname(__DIR__) . '/sql'))));
+        // throws InvalidSchemaException if schema is incorrect
         $Update->checkSchema();
     }
 

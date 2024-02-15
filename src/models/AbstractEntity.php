@@ -10,7 +10,6 @@
 namespace Elabftw\Models;
 
 use function array_column;
-use function array_keys;
 use function array_merge;
 use Elabftw\Elabftw\ContentParams;
 use Elabftw\Elabftw\Db;
@@ -23,6 +22,7 @@ use Elabftw\Elabftw\Tools;
 use Elabftw\Enums\Action;
 use Elabftw\Enums\EntityType;
 use Elabftw\Enums\Metadata as MetadataEnum;
+use Elabftw\Enums\SearchType;
 use Elabftw\Enums\State;
 use Elabftw\Exceptions\DatabaseErrorException;
 use Elabftw\Exceptions\IllegalActionException;
@@ -33,6 +33,7 @@ use Elabftw\Interfaces\RestInterface;
 use Elabftw\Services\AccessKeyHelper;
 use Elabftw\Services\AdvancedSearchQuery;
 use Elabftw\Services\AdvancedSearchQuery\Visitors\VisitorParameters;
+use Elabftw\Services\Check;
 use Elabftw\Traits\EntityTrait;
 use function explode;
 use function implode;
@@ -209,6 +210,7 @@ abstract class AbstractEntity implements RestInterface
      * Only logged in users use this function
      * @param DisplayParams $displayParams display parameters like sort/limit/order by
      * @param bool $extended use it to get a full reply. used by API to get everything back
+     * @psalm-suppress UnusedForeachValue
      *
      *                   \||/
      *                   |  @___oo
@@ -223,7 +225,6 @@ abstract class AbstractEntity implements RestInterface
      *     \______(_______;;; __;;;
      *
      *          Here be dragons!
-     *  @psalm-suppress UnusedForeachValue
      */
     public function readShow(DisplayParams $displayParams, bool $extended = false, string $can = 'canread'): array
     {
@@ -233,7 +234,11 @@ abstract class AbstractEntity implements RestInterface
         }
 
         $EntitySqlBuilder = new EntitySqlBuilder($this);
-        $sql = $EntitySqlBuilder->getReadSqlBeforeWhere($extended, $extended, $displayParams->hasMetadataSearch);
+        $sql = $EntitySqlBuilder->getReadSqlBeforeWhere(
+            $extended,
+            $extended,
+            $displayParams->searchType === SearchType::Related ? $displayParams->relatedOrigin : null,
+        );
 
         // first WHERE is the state, possibly including archived
         $stateSql = 'entity.state = :normal';
@@ -255,8 +260,6 @@ abstract class AbstractEntity implements RestInterface
             $this->extendedFilter,
             $this->idFilter,
             'GROUP BY id',
-            // build the having clause for metadata
-            $displayParams->getMetadataHavingSql(),
             'ORDER BY',
             $displayParams->orderby::toSql($displayParams->orderby),
             $displayParams->sort->value,
@@ -273,12 +276,6 @@ abstract class AbstractEntity implements RestInterface
         $req->bindValue(':normal', State::Normal->value, PDO::PARAM_INT);
         if ($displayParams->includeArchived) {
             $req->bindValue(':archived', State::Archived->value, PDO::PARAM_INT);
-        }
-        if ($displayParams->hasMetadataSearch) {
-            foreach (array_keys($displayParams->metadataKey) as $i) {
-                $req->bindParam(sprintf(':metadata_value_path_%d', $i), $displayParams->metadataValuePath[$i]);
-                $req->bindParam(sprintf(':metadata_value_%d', $i), $displayParams->metadataValue[$i]);
-            }
         }
 
         $this->bindExtendedValues($req);
@@ -525,7 +522,7 @@ abstract class AbstractEntity implements RestInterface
             throw new IllegalActionException('No id was set!');
         }
         $EntitySqlBuilder = new EntitySqlBuilder($this);
-        $sql = $EntitySqlBuilder->getReadSqlBeforeWhere(true, true, true);
+        $sql = $EntitySqlBuilder->getReadSqlBeforeWhere(true, true);
 
         $sql .= sprintf(' WHERE entity.id = %d', $this->id);
 
@@ -655,13 +652,18 @@ abstract class AbstractEntity implements RestInterface
     /**
      * Update only one field in the metadata json
      */
-    private function updateJsonField(string $key, string|array $value): bool
+    private function updateJsonField(string $key, string|array|int $value): bool
     {
         $Changelog = new Changelog($this);
-        $valueAsString = is_array($value) ? implode(', ', $value) : $value;
+        $valueAsString = is_array($value) ? implode(', ', $value) : (string) $value;
+
+        // Either ExperimentsLinks or ItmesLinks could be used here
+        if ($this->ExperimentsLinks->isSelfLinkViaMetadata($key, $valueAsString)) {
+            throw new ImproperActionException(_('Linking an item to itself is not allowed. Please select a different target.'));
+        }
+
         $Changelog->create(new ContentParams('metadata_' . $key, $valueAsString));
         $value = json_encode($value, JSON_HEX_APOS | JSON_THROW_ON_ERROR);
-
 
         // build jsonPath to field
         $field = sprintf(

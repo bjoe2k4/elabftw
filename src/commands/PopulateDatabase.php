@@ -92,7 +92,6 @@ class PopulateDatabase extends Command
             }
         }
 
-
         // drop database
         $output->writeln('Dropping current database and loading structure...');
         $this->dropAndInitDb();
@@ -236,7 +235,7 @@ class PopulateDatabase extends Command
                 $ItemsTypes = new ItemsTypes($user);
                 $ItemsTypes->setId($ItemsTypes->create($items_types['name']));
                 $ItemsTypes->bypassWritePermission = true;
-                $defaultPermissions = BasePermissions::MyTeams->toJson();
+                $defaultPermissions = BasePermissions::Team->toJson();
                 $patch = array(
                     'color' => $items_types['color'],
                     'body' => $items_types['template'] ?? '',
