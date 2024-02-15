@@ -104,10 +104,12 @@
         <h1 class='my-4 '>{{ 'Login to your account'|trans }}</h1>
         <div class='col-md-4 mx-auto text-left form-group'>
           <label for='email'>{{ App.Config.configArr.ldap_search_attr == 'mail' ? 'Email'|trans : 'Login'|trans }}</label>
+            {# DEMO MOD: add value attribute to email input #}
           <input class='form-control mb-4' id='email' name='email' type='{{ App.Config.configArr.ldap_search_attr == 'mail' ? 'email' : 'text' }}' value='demo@elabftw.net' autocomplete='email' required />
           <label for='password'>{{ 'Password'|trans }}</label>
           <div class='input-group'>
-            <input class='form-control' id='password' name='password' type='password' value='demodemo' required />
+            {# DEMO MOD: add value attribute to password input #}
+            <input class='form-control' id='password' name='password' type='password' value='demodemodemo' required />
             <div class='input-group-append'>
               <button type='button' class='btn btn-light input-border' data-action='toggle-password' data-target='password' title='{{ 'Show password'|trans }}' aria-label='{{ 'Show password'|trans }}'><i class='fas fa-eye' aria-hidden='true'></i></button>
             </div>
