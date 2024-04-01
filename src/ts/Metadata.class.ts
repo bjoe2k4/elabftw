@@ -352,6 +352,14 @@ export class Metadata {
       return inputGroupDiv;
     }
 
+    // Add action button
+    if (properties.type === ExtraFieldInputType.Action) {
+      const actionBtn = document.createElement('button');
+      actionBtn.classList.add('btn', 'btn-primary');
+      actionBtn.innerText = i18next.t('Execute action');
+      return actionBtn;
+    }
+
     // USERS/EXPERIMENTS/ITEMS input have a prepend to the input with a magnifying glass
     if ([ExtraFieldInputType.Users, ExtraFieldInputType.Experiments, ExtraFieldInputType.Items].includes(properties.type)) {
       // set the target for autocomplete function
