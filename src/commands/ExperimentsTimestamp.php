@@ -64,7 +64,7 @@ final class ExperimentsTimestamp extends Command
                         timestamped_at IS NULL 
                         OR (
                             modified_at > :m 
-                            AND timestamped_at != modified_at
+                            AND ABS(TIMESTAMPDIFF(SECOND, timestamped_at, modified_at)) > 60
                         )
                     )';
         $teams = $input->getOption('teams');
