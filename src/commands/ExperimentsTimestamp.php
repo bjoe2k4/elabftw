@@ -58,7 +58,15 @@ final class ExperimentsTimestamp extends Command
             $output->writeln(sprintf('Computed origin date: %s', $dateTimeImmutable->format('Y-m-d H:i:s')));
         }
         $Db = Db::getConnection();
-        $sql = 'SELECT id FROM experiments WHERE modified_at > :m AND IFNULL(timestamped_at, NOW()) != modified_at';
+        $sql = 'SELECT id 
+                    FROM experiments 
+                    WHERE (
+                        timestamped_at IS NULL 
+                        OR (
+                            modified_at > :m 
+                            AND timestamped_at != modified_at
+                        )
+                    )';
         $teams = $input->getOption('teams');
         if ($teams) {
             $sql .= sprintf(' AND team IN (%s)', implode(',', $teams));
